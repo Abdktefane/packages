@@ -126,12 +126,17 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
       final Map<dynamic, dynamic> map = event as Map<dynamic, dynamic>;
       switch (map['event']) {
         case 'initialized':
+          final List<dynamic>? resolutionsValues =
+              map['availableResolutions'] as List<dynamic>?;
           return VideoEvent(
             eventType: VideoEventType.initialized,
             duration: Duration(milliseconds: map['duration'] as int),
             size: Size((map['width'] as num?)?.toDouble() ?? 0.0,
                 (map['height'] as num?)?.toDouble() ?? 0.0),
             rotationCorrection: map['rotationCorrection'] as int? ?? 0,
+            availableResolutions:
+                resolutionsValues?.map<Resolution>(_toResolution).toList() ??
+                    <Resolution>[],
           );
         case 'completed':
           return VideoEvent(
@@ -170,6 +175,16 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
         .setMixWithOthers(MixWithOthersMessage(mixWithOthers: mixWithOthers));
   }
 
+  /// Set bitrate for the video
+  @override
+  Future<void> setResolution(int textureId, Resolution bitrate) {
+    return _api.setResolution(ResolutionMessage(
+      textureId: textureId,
+      width: bitrate.width,
+      height: bitrate.height,
+    ));
+  }
+
   EventChannel _eventChannelFor(int textureId) {
     return EventChannel('flutter.io/videoPlayer/videoEvents$textureId');
   }
@@ -188,5 +203,10 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
       Duration(milliseconds: pair[0] as int),
       Duration(milliseconds: pair[1] as int),
     );
+  }
+
+  Resolution _toResolution(dynamic value) {
+    final List<dynamic> pair = value as List<dynamic>;
+    return Resolution(pair[0] as int, pair[1] as int);
   }
 }

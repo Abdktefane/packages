@@ -107,6 +107,11 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
   Future<void> setWebOptions(int textureId, VideoPlayerWebOptions options) {
     throw UnimplementedError('setWebOptions() has not been implemented.');
   }
+
+  /// Set resolution for the video
+  Future<void> setResolution(int textureId, Resolution resolution) async {
+    throw UnimplementedError('setResolution() has not been implemented.');
+  }
 }
 
 class _PlaceholderImplementation extends VideoPlayerPlatform {}
@@ -218,6 +223,7 @@ class VideoEvent {
     this.rotationCorrection,
     this.buffered,
     this.isPlaying,
+    this.availableResolutions,
   });
 
   /// The type of the event.
@@ -248,6 +254,11 @@ class VideoEvent {
   /// Only used if [eventType] is [VideoEventType.isPlayingStateUpdate].
   final bool? isPlaying;
 
+  /// available resolutions of the player
+  ///
+  /// Only used if [eventType] is [VideoEventType.initialized].
+  final List<Resolution>? availableResolutions;
+
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
@@ -258,7 +269,8 @@ class VideoEvent {
             size == other.size &&
             rotationCorrection == other.rotationCorrection &&
             listEquals(buffered, other.buffered) &&
-            isPlaying == other.isPlaying;
+            isPlaying == other.isPlaying &&
+            listEquals(availableResolutions, other.availableResolutions);
   }
 
   @override
@@ -269,6 +281,7 @@ class VideoEvent {
         rotationCorrection,
         buffered,
         isPlaying,
+        availableResolutions,
       );
 }
 
@@ -365,6 +378,34 @@ class DurationRange {
 
   @override
   int get hashCode => Object.hash(start, end);
+}
+
+/// Represents a resolution with width and height values.
+@immutable
+class Resolution {
+  /// Creates a [Resolution] with the given [width] and [height].
+  const Resolution(this.width, this.height);
+
+  /// The width of the resolution.
+  final int width;
+
+  /// The height of the resolution.
+  final int height;
+
+  @override
+  String toString() =>
+      '${objectRuntimeType(this, 'Resolution')}(width: $width, height: $height)';
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Resolution &&
+          runtimeType == other.runtimeType &&
+          width == other.width &&
+          height == other.height;
+
+  @override
+  int get hashCode => Object.hash(width, height);
 }
 
 /// [VideoPlayerOptions] can be optionally used to set additional player settings

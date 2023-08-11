@@ -219,13 +219,18 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
     super.initState();
     _controller = VideoPlayerController.networkUrl(
       Uri.parse(
-          'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'),
+        'https://assets.ta3leem.iq/ta3leem/ta3leem/videos/m3u8/a8ccea1f-be1e-4309-a118-8577d91f99d4.m3u8',
+      ),
+      // Uri.parse(
+      //     'https://live-par-2-abr.livepush.io/vod/bigbuckbunny/index.m3u8'),
+
       closedCaptionFile: _loadCaptions(),
       videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
     );
 
     _controller.addListener(() {
       setState(() {});
+      debugPrint('controller value is ${_controller.value}');
     });
     _controller.setLooping(true);
     _controller.initialize();
@@ -373,6 +378,39 @@ class _ControlsOverlay extends StatelessWidget {
                 horizontal: 16,
               ),
               child: Text('${controller.value.playbackSpeed}x'),
+            ),
+          ),
+        ),
+        Align(
+          alignment: Alignment.bottomRight,
+          child: PopupMenuButton<Resolution>(
+            initialValue: controller.value.resolution,
+            tooltip: 'Playback resolution',
+            onSelected: (Resolution resolution) {
+              controller.setResolution(resolution);
+            },
+            itemBuilder: (BuildContext context) {
+              return <PopupMenuItem<Resolution>>[
+                for (final Resolution resolution
+                    in controller.value.availableResolutions)
+                  PopupMenuItem<Resolution>(
+                    value: resolution,
+                    child: Text('${resolution.width}/${resolution.height}'),
+                  )
+              ];
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                // Using less vertical padding as the text is also longer
+                // horizontally, so it feels like it would need more spacing
+                // horizontally (matching the aspect ratio of the video).
+                vertical: 12,
+                horizontal: 16,
+              ),
+              child: Text(
+                '${controller.value.resolution.width}'
+                '/${controller.value.resolution.height}',
+              ),
             ),
           ),
         ),

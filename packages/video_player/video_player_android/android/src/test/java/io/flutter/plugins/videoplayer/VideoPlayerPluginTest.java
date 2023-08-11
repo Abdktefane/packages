@@ -7,9 +7,9 @@ package io.flutter.plugins.videoplayer;
 import org.junit.Test;
 
 public class VideoPlayerPluginTest {
-  // This is only a placeholder test and doesn't actually initialize the plugin.
-  @Test
-  public void initPluginDoesNotThrow() {
-    final VideoPlayerPlugin plugin = new VideoPlayerPlugin();
-  }
+    // This is only a placeholder test and doesn't actually initialize the plugin.
+    @Test
+    public void initPluginDoesNotThrow() {
+        final VideoPlayerPlugin plugin = new VideoPlayerPlugin();
+    }
 }

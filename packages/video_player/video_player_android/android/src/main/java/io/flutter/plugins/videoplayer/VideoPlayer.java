@@ -20,20 +20,26 @@ import com.google.android.exoplayer2.PlaybackException;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.Player.Listener;
+import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
 import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
+import com.google.android.exoplayer2.source.hls.HlsManifest;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
+import com.google.android.exoplayer2.source.hls.playlist.HlsMultivariantPlaylist;
 import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource;
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.google.android.exoplayer2.util.Util;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.view.TextureRegistry;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -62,6 +68,8 @@ final class VideoPlayer {
 
   private final VideoPlayerOptions options;
 
+  private DefaultTrackSelector trackSelector;
+
   private DefaultHttpDataSource.Factory httpDataSourceFactory = new DefaultHttpDataSource.Factory();
 
   VideoPlayer(
@@ -75,8 +83,10 @@ final class VideoPlayer {
     this.eventChannel = eventChannel;
     this.textureEntry = textureEntry;
     this.options = options;
+    this.trackSelector = new DefaultTrackSelector(context);
 
-    ExoPlayer exoPlayer = new ExoPlayer.Builder(context).build();
+    ExoPlayer exoPlayer = new ExoPlayer.Builder(context).setTrackSelector(trackSelector)
+            .build();
     Uri uri = Uri.parse(dataSource);
 
     buildHttpDataSourceFactory(httpHeaders);
@@ -292,6 +302,15 @@ final class VideoPlayer {
     return exoPlayer.getCurrentPosition();
   }
 
+  void setResolution(int width,int height) {
+    final DefaultTrackSelector.Parameters.Builder params = trackSelector.buildUponParameters()
+            .setMaxVideoSize(
+              width == 0 ? Integer.MAX_VALUE : width,
+              height == 0 ?  Integer.MAX_VALUE : height
+            );
+    trackSelector.setParameters(params);
+  }
+
   @SuppressWarnings("SuspiciousNameCombination")
   @VisibleForTesting
   void sendInitialized() {
@@ -320,6 +339,22 @@ final class VideoPlayer {
         if (rotationDegrees == 180) {
           event.put("rotationCorrection", rotationDegrees);
         }
+      }
+
+      if (exoPlayer.getCurrentManifest() != null) {
+        Object manifest = exoPlayer.getCurrentManifest();
+        // TODO(abd): check how many manifest type we have here
+        HlsManifest hlsManifest = (HlsManifest) manifest;
+        final List<HlsMultivariantPlaylist.Variant> variants =  hlsManifest.multivariantPlaylist.variants;
+        List<List<Integer>> availableResolutions = new ArrayList<>();
+        // Iterate through the variants and extract resolution information
+        for (HlsMultivariantPlaylist.Variant variant : variants) {
+          List<Integer> resolution = new ArrayList<>();
+          resolution.add(variant.format.width);
+          resolution.add(variant.format.height);
+          availableResolutions.add(resolution);
+        }
+        event.put("availableResolutions", availableResolutions);
       }
 
       eventSink.success(event);

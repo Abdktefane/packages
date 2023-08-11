@@ -19,6 +19,7 @@ class _ApiLogger implements TestHostVideoPlayerApi {
   VolumeMessage? volumeMessage;
   PlaybackSpeedMessage? playbackSpeedMessage;
   MixWithOthersMessage? mixWithOthersMessage;
+  ResolutionMessage? resolutionMessage;
 
   @override
   TextureMessage create(CreateMessage arg) {
@@ -85,6 +86,12 @@ class _ApiLogger implements TestHostVideoPlayerApi {
   void setPlaybackSpeed(PlaybackSpeedMessage arg) {
     log.add('setPlaybackSpeed');
     playbackSpeedMessage = arg;
+  }
+
+  @override
+  void setResolution(ResolutionMessage msg) {
+    log.add('setBitrate');
+    resolutionMessage = msg;
   }
 }
 
@@ -391,6 +398,14 @@ void main() {
               isPlaying: false,
             ),
           ]));
+    });
+
+    test('setResolution', () async {
+      await player.setResolution(1, const Resolution(20, 40));
+      expect(log.log.last, 'setResolution');
+      expect(log.resolutionMessage?.textureId, 1);
+      expect(log.resolutionMessage?.width, 20);
+      expect(log.resolutionMessage?.height, 40);
     });
   });
 }

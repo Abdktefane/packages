@@ -14,7 +14,12 @@ import 'package:video_player_platform_interface/video_player_platform_interface.
 import 'src/closed_caption_file.dart';
 
 export 'package:video_player_platform_interface/video_player_platform_interface.dart'
-    show DurationRange, DataSourceType, VideoFormat, VideoPlayerOptions;
+    show
+        DurationRange,
+        DataSourceType,
+        VideoFormat,
+        VideoPlayerOptions,
+        Resolution;
 
 export 'src/closed_caption_file.dart';
 
@@ -52,6 +57,8 @@ class VideoPlayerValue {
     this.playbackSpeed = 1.0,
     this.rotationCorrection = 0,
     this.errorDescription,
+    this.resolution = const Resolution(0, 0),
+    this.availableResolutions = const <Resolution>[],
   });
 
   /// Returns an instance for a video that hasn't been loaded.
@@ -141,6 +148,12 @@ class VideoPlayerValue {
     return aspectRatio;
   }
 
+  /// The current resolution of the playback.
+  final Resolution resolution;
+
+  /// The available resolutions of the current playback
+  final List<Resolution> availableResolutions;
+
   /// Returns a new instance that has the same values as this current instance,
   /// except for any overrides passed in as arguments to [copyWith].
   VideoPlayerValue copyWith({
@@ -158,6 +171,8 @@ class VideoPlayerValue {
     double? playbackSpeed,
     int? rotationCorrection,
     String? errorDescription = _defaultErrorDescription,
+    Resolution? resolution,
+    List<Resolution>? availableResolutions,
   }) {
     return VideoPlayerValue(
       duration: duration ?? this.duration,
@@ -176,6 +191,8 @@ class VideoPlayerValue {
       errorDescription: errorDescription != _defaultErrorDescription
           ? errorDescription
           : this.errorDescription,
+      resolution: resolution ?? this.resolution,
+      availableResolutions: availableResolutions ?? this.availableResolutions,
     );
   }
 
@@ -194,7 +211,9 @@ class VideoPlayerValue {
         'isBuffering: $isBuffering, '
         'volume: $volume, '
         'playbackSpeed: $playbackSpeed, '
-        'errorDescription: $errorDescription)';
+        'errorDescription: $errorDescription, '
+        'resolution: $resolution, '
+        'availableResolutions: $availableResolutions)';
   }
 
   @override
@@ -215,7 +234,9 @@ class VideoPlayerValue {
           errorDescription == other.errorDescription &&
           size == other.size &&
           rotationCorrection == other.rotationCorrection &&
-          isInitialized == other.isInitialized;
+          isInitialized == other.isInitialized &&
+          resolution == other.resolution &&
+          listEquals(availableResolutions, other.availableResolutions);
 
   @override
   int get hashCode => Object.hash(
@@ -233,6 +254,8 @@ class VideoPlayerValue {
         size,
         rotationCorrection,
         isInitialized,
+        resolution,
+        availableResolutions,
       );
 }
 
@@ -441,6 +464,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
             rotationCorrection: event.rotationCorrection,
             isInitialized: event.duration != null,
             errorDescription: null,
+            availableResolutions: event.availableResolutions,
           );
           initializingCompleter.complete(null);
           _applyLooping();
@@ -737,6 +761,23 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     value = value.copyWith(
       position: position,
       caption: _getCaptionAt(position),
+    );
+  }
+
+  /// Set resolution for the video
+  Future<void> setResolution(Resolution resolution) async {
+    value = value.copyWith(resolution: resolution);
+    await _applyResolution();
+  }
+
+  Future<void> _applyResolution() async {
+    if (_isDisposedOrNotInitialized) {
+      return;
+    }
+
+    await _videoPlayerPlatform.setResolution(
+      _textureId,
+      value.resolution,
     );
   }
 

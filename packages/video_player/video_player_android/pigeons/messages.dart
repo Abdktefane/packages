@@ -56,6 +56,13 @@ class MixWithOthersMessage {
   bool mixWithOthers;
 }
 
+class ResolutionMessage {
+  ResolutionMessage(this.textureId, this.width, this.height);
+  int textureId;
+  int? width;
+  int? height;
+}
+
 @HostApi(dartHostTestHandler: 'TestHostVideoPlayerApi')
 abstract class AndroidVideoPlayerApi {
   void initialize();
@@ -69,4 +76,5 @@ abstract class AndroidVideoPlayerApi {
   void seekTo(PositionMessage msg);
   void pause(TextureMessage msg);
   void setMixWithOthers(MixWithOthersMessage msg);
+  void setResolution(ResolutionMessage msg);
 }
